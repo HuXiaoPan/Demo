@@ -1,0 +1,28 @@
+#ifndef NA_CSTDLIB_WRAPPER_INCLUDED_
+#define NA_CSTDLIB_WRAPPER_INCLUDED_
+
+#include <stdlib.h>
+#include_next <cstdlib>
+
+#include <sys/neutrino.h>
+
+#ifdef major
+   #undef major
+#endif
+#ifdef minor
+   #undef minor
+#endif
+
+// workaround missing abs(long long) used by boost
+#if _NTO_VERSION == 650
+namespace std
+{
+   inline
+   long long abs(long long x)
+   {
+      return llabs(x);
+   }
+}
+#endif
+
+#endif

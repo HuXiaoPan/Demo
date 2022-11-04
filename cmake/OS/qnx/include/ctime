@@ -1,0 +1,8 @@
+#ifndef NA_CTIME_WRAPPER_INCLUDED_
+#define NA_CTIME_WRAPPER_INCLUDED_
+
+#include <time.h>
+#include_next <ctime>
+
+#endif
+

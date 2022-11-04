@@ -1,0 +1,45 @@
+#ifndef NA_CMATH_WRAPPER_INCLUDED_
+#define NA_CMATH_WRAPPER_INCLUDED_
+
+#include <math.h>
+#include_next <cmath>
+
+// Get rid of those macros defined in <math.h> in lieu of real functions.
+#undef div
+#undef acos
+#undef asin
+#undef atan
+#undef atan2
+#undef ceil
+#undef cos
+#undef cosh
+#undef exp
+#undef fabs
+#undef floor
+#undef fmod
+#undef frexp
+#undef ldexp
+#undef log
+#undef log10
+#undef pow
+#undef sin
+#undef sinh
+#undef sqrt
+#undef tan
+#undef tanh
+
+#undef fpclassify
+#undef isfinite
+#undef isinf
+#undef isnan
+#undef isnormal
+#undef signbit
+#undef isgreater
+#undef isgreaterequal
+#undef isless
+#undef islessequal
+#undef islessgreater
+#undef isunordered
+
+#endif
+

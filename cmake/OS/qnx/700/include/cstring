@@ -1,0 +1,8 @@
+#ifndef NA_CSTRING_WRAPPER_INCLUDED_
+#define NA_CSTRING_WRAPPER_INCLUDED_
+
+#include <string.h>
+#include_next <cstring>
+
+#endif
+

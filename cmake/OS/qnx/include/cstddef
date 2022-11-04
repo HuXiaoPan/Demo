@@ -1,0 +1,7 @@
+#ifndef NA_CSTDDEF_WRAPPER_INCLUDED_
+#define NA_CSTDDEF_WRAPPER_INCLUDED_
+
+#include <stddef.h>
+#include_next <cstddef>
+
+#endif
