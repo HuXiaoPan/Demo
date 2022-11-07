@@ -1,8 +1,0 @@
-#ifndef NA_CLIMITS_WRAPPER_INCLUDED_
-#define NA_CLIMITS_WRAPPER_INCLUDED_
-
-#include <limits.h>
-#include_next <climits>
-
-#endif
-

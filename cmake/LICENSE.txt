@@ -1,6 +1,0 @@
-/**
-* Project BCore
-*  
-* All rights reserved.
-* (c) copyright 2018
-*/

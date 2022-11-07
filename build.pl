@@ -1,4 +1,4 @@
-#!/usr/bin/perl -I.
+#!/usr/bin/perl -I./
 
-use perl::Test;
-func1();
+use perl::main;
+main();

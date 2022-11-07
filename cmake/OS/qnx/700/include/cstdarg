@@ -1,8 +1,0 @@
-#ifndef NA_CSTDARG_WRAPPER_INCLUDED_
-#define NA_CSTDARG_WRAPPER_INCLUDED_
-
-#undef __need___va_list
-#include <stdarg.h>
-#include_next <cstdarg>
-
-#endif

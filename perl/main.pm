@@ -1,4 +1,4 @@
-package perl::Test;
+package perl::main;
 
 use strict;
 use warnings;
@@ -11,17 +11,17 @@ BEGIN # perl module begin function.
 {
     require Exporter;
     our @ISA = qw(Exporter);
-    our @EXPORT = qw(func1);
+    our @EXPORT = qw(main);
 
     our $PROJECT_VER = "0.0.1";
-    print("package name:" . __PACKAGE__. " file name:" .__FILE__. " line number:" .__LINE__. " project version:" .$PROJECT_VER."\n");
+    print("package name:" . __PACKAGE__ . "\n file name:" . __FILE__ . "\n line number:" . __LINE__ . "\n project version:" . $PROJECT_VER."\n");
 }
 
 my $CMAKE_VERSION_MAJOR;
 my $CMAKE_VERSION_MINOR;
 my $CMAKE_VERSION_PATCH;
 
-sub func1
+sub main
 {
     my $CMAKE_VERSION = `cmake --version`;
     ($CMAKE_VERSION_MAJOR, $CMAKE_VERSION_MINOR, $CMAKE_VERSION_PATCH) = ( $CMAKE_VERSION =~ /cmake version ([0-9]+)\.([0-9]+)\.([0-9]+)/ );

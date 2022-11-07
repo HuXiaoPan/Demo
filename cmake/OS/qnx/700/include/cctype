@@ -1,8 +1,0 @@
-#ifndef NA_CTYPE_WRAPPER_INCLUDED_
-#define NA_CTYPE_WRAPPER_INCLUDED_
-
-#include <ctype.h>
-#include_next <cctype>
-
-#endif
-

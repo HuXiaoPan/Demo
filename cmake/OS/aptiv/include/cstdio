@@ -1,8 +1,0 @@
-#ifndef NA_CSTDIO_WRAPPER_INCLUDED_
-#define NA_CSTDIO_WRAPPER_INCLUDED_
-
-#include <stdio.h>
-#include_next <cstdio>
-
-#endif
-
