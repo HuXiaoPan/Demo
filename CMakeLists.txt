@@ -9,13 +9,19 @@ cmake_minimum_required(VERSION 2.8)
 
 project(demo)
 
-message("pre:"${PROJECT_BINARY_DIR})
-message("pre:"${PROJECT_SOURCE_DIR})
-include_directories(/usr/include/GL)
+message("main:"${PROJECT_BINARY_DIR})
+message("main:"${PROJECT_SOURCE_DIR})
+message("main:"${CMAKE_CURRENT_SOURCE_DIR})
+message("main:"${PROJECT_NAME})
 
-link_directories(./test_module)
+include_directories(${PROJECT_SOURCE_DIR}/test_module)
+
+link_directories(${PROJECT_SOURCE_DIR}/libs)
 
 add_subdirectory(test_module)
 
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
+
 add_executable(${PROJECT_NAME}.exe main.cpp)
-target_link_libraries(${PROJECT_NAME}.exe -lGL -lGLU -lglut -ltl)
+
+target_link_libraries(${PROJECT_NAME}.exe tl)
