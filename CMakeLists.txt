@@ -16,7 +16,7 @@ message("main:"${PROJECT_NAME})
 
 include_directories(${PROJECT_SOURCE_DIR}/test_module)
 
-link_directories(${PROJECT_SOURCE_DIR}/libs)
+link_directories(${PROJECT_BINARY_DIR}/libs)
 
 add_subdirectory(test_module)
 
