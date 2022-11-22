@@ -14,14 +14,8 @@ message("main:"${PROJECT_SOURCE_DIR})
 message("main:"${CMAKE_CURRENT_SOURCE_DIR})
 message("main:"${PROJECT_NAME})
 
-include_directories(${PROJECT_SOURCE_DIR}/test_module)
-
-link_directories(${PROJECT_BINARY_DIR}/libs)
-
-add_subdirectory(test_module)
+add_subdirectory(module_01)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 
 add_executable(${PROJECT_NAME}.exe main.cpp)
-
-target_link_libraries(${PROJECT_NAME}.exe tl)

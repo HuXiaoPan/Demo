@@ -1,13 +1,7 @@
-#include "include/tl.hpp"
+#include <iostream>
 
 int main(int argc, char const *argv[])
 {
-    int i = 0;
-    while (i < 100)
-    {
-        ++i;
-    test_tl();
-        /* code */
-    }
+    std::cout << "is run !!!" << std::endl;
     return 0;
 }
