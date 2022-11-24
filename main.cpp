@@ -1,7 +1,8 @@
 #include <iostream>
+#include "Helper.hpp"
 
 int main(int argc, char const *argv[])
 {
-    std::cout << "is run !!!" << std::endl;
+    Helper h;
     return 0;
 }
