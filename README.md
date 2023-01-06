@@ -13,3 +13,7 @@ This is a project for practice.
 ## 2022年11月22日
 
 添加一个帮助类
+
+## 2023年01月06日
+
+实现了c++简单的lcm发送和接收
