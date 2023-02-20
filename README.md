@@ -17,3 +17,4 @@ This is a project for practice.
 ## 2023年01月06日
 
 实现了c++简单的lcm发送和接收
+/home/hupan/Workspace/AOM_Mjolnir/Mjolnir/Mjolnir/bin/Debug/Mjolnir.exe
