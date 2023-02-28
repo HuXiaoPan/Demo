@@ -16,7 +16,6 @@ message("main:"${PROJECT_NAME})
 
 add_subdirectory(test_LCM)
 add_subdirectory(test_OPGL)
-add_subdirectory(test_module)
 
 # add_compile_options(-ldl)
 

@@ -18,3 +18,7 @@ This is a project for practice.
 
 实现了c++简单的lcm发送和接收
 /home/hupan/Workspace/AOM_Mjolnir/Mjolnir/Mjolnir/bin/Debug/Mjolnir.exe
+
+## 2023年02月24日
+
+继续学习OpenGL，鸽太久了一点都不专注
