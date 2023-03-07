@@ -27,6 +27,4 @@ void main_test_LCM()
     my_data.name = "example string";
     my_data.enabled = true;
     lcm.publish("EXAMPLE", &my_data);
-
-
 }
