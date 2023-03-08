@@ -1,6 +1,8 @@
 #include <iostream>
 #include "glad.h"
 #include <GLFW/glfw3.h>
+#include "GLSL.h"
+#include <cmath>
 
 // settings
 const unsigned int SCR_WIDTH = 800;
@@ -10,28 +12,10 @@ void Init();
 GLFWwindow *InitWindow();
 bool InitGlad();
 unsigned int ComplierShadow();
-void DrawShapes(unsigned int &VBO, unsigned int &VAO, unsigned int &EBO);
+void DrawShapes(unsigned int VBO[], unsigned int VAO[], unsigned int EBO[]);
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window);
-
-const char *vertexShaderSource = "#version 330 core\n"
-                                 "layout (location = 0) in vec3 aPos;\n"
-                                 "layout (location = 1) in vec3 aColor;\n"
-                                 "out vec3 ourColor;\n"
-                                 "void main()\n"
-                                 "{\n"
-                                 "   gl_Position = vec4(aPos, 1.0);\n"
-                                 "   ourColor = aColor;\n"
-                                 "}\0";
-
-const char *fragmentShaderSource = "#version 330 core\n"
-                                   "out vec4 FragColor;\n"
-                                   "in vec3 ourColor;\n"
-                                   "void main()\n"
-                                   "{\n"
-                                   "   FragColor = vec4(ourColor, 1.0f);\n"
-                                   "}\n\0";
 
 int main_test_OPGL(int argc, char const *argv[])
 {
@@ -51,7 +35,7 @@ int main_test_OPGL(int argc, char const *argv[])
     }
 
     unsigned int shaderProgram = ComplierShadow();
-    unsigned int VBO, VAO, EBO;
+    unsigned int VBO[1], VAO[1], EBO[1];
     DrawShapes(VBO, VAO, EBO);
     // You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other
     // VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
@@ -59,7 +43,6 @@ int main_test_OPGL(int argc, char const *argv[])
 
     // as we only have a single shader, we could also just activate our shader once beforehand if we want to
     glUseProgram(shaderProgram);
-
 
     // uncomment this call to draw in wireframe polygons.
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -76,10 +59,15 @@ int main_test_OPGL(int argc, char const *argv[])
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
+        float timeValue = glfwGetTime();
+        float baseValue = (sin(timeValue) / 2.0f) + 0.5f;
+        int vertexColorLocation = glGetUniformLocation(shaderProgram, "global_color");
+        glUniform4f(vertexColorLocation, 1.0f - baseValue, baseValue, abs(baseValue * 2 - 1.0f), 1.0f);
+
         // render the triangle
-        glBindVertexArray(VAO);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glBindVertexArray(VAO[0]);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[0]);
+        glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
@@ -89,9 +77,9 @@ int main_test_OPGL(int argc, char const *argv[])
 
     // optional: de-allocate all resources once they've outlived their purpose:
     // ------------------------------------------------------------------------
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
-    glDeleteBuffers(1, &EBO);
+    glDeleteVertexArrays(1, VAO);
+    glDeleteBuffers(1, VBO);
+    glDeleteBuffers(1, EBO);
     glDeleteProgram(shaderProgram);
 
     // glfw: terminate, clearing all previously allocated GLFW resources.
@@ -180,7 +168,7 @@ unsigned int ComplierShadow()
     return shaderProgram;
 }
 
-void DrawShapes(unsigned int &VBO, unsigned int &VAO, unsigned int &EBO)
+void DrawShapes(unsigned int VBO[], unsigned int VAO[], unsigned int EBO[])
 {
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
@@ -189,22 +177,33 @@ void DrawShapes(unsigned int &VBO, unsigned int &VAO, unsigned int &EBO)
         0.5f, 0.5f, 0.0f,
         0.5f, 0.0f, 0.0f,
         0.0f, 0.0f, 0.0f,
-        0.0f, 0.5f, 0.0f};
+        0.0f, 0.5f, 0.0f,
+        // first triangle
+        -0.9f, -0.5f, 0.0f, // left
+        -0.0f, -0.5f, 0.0f, // right
+        -0.45f, 0.5f, 0.0f, // top
+                            // second triangle
+        0.0f, -0.5f, 0.0f,  // left
+        0.9f, -0.5f, 0.0f,  // right
+        0.45f, 0.5f, 0.0f   // top
+    };
 
     unsigned int indices[] = {
         0, 1, 2, // 第一个三角形
-        2, 3, 0  // 第二个三角形
+        2, 3, 0, // 第二个三角形
+        4, 5, 6, // 第一个三角形
+        7, 8, 9  // 第二个三角形
     };
 
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
+    glGenVertexArrays(1, VAO);
+    glGenBuffers(1, VBO);
+    glGenBuffers(1, EBO);
 
     // bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBindVertexArray(VAO[0]);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[0]);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
     // position attribute
