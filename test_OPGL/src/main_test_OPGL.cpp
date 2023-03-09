@@ -1,8 +1,11 @@
 #include <iostream>
 #include "glad.h"
 #include <GLFW/glfw3.h>
-#include "GLSL.h"
 #include <cmath>
+#include "shader.h"
+
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 // settings
 const unsigned int SCR_WIDTH = 800;
@@ -44,8 +47,27 @@ int main_test_OPGL(int argc, char const *argv[])
     // as we only have a single shader, we could also just activate our shader once beforehand if we want to
     glUseProgram(shaderProgram);
 
+    unsigned int texture;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    int width, height, nrChannels;
+    unsigned char *data = stbi_load("res/container.jpg", &width, &height, &nrChannels, 0);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+    stbi_image_free(data);
+
     // uncomment this call to draw in wireframe polygons.
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window))
@@ -65,9 +87,10 @@ int main_test_OPGL(int argc, char const *argv[])
         glUniform4f(vertexColorLocation, 1.0f - baseValue, baseValue, abs(baseValue * 2 - 1.0f), 1.0f);
 
         // render the triangle
+        glBindTexture(GL_TEXTURE_2D, texture);
         glBindVertexArray(VAO[0]);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[0]);
-        glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
@@ -122,6 +145,12 @@ bool InitGlad()
 
 unsigned int ComplierShadow()
 {
+
+    // build and compile our shader program
+    // ------------------------------------
+    Shader ourShader("res/vs.glsl", "res/fs.glsl"); // you can name your shader files however you like
+
+    /*
     // build and compile our shader program
     // ------------------------------------
     // vertex shader
@@ -165,7 +194,8 @@ unsigned int ComplierShadow()
     }
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
-    return shaderProgram;
+    */
+    return ourShader.ID;
 }
 
 void DrawShapes(unsigned int VBO[], unsigned int VAO[], unsigned int EBO[])
@@ -174,26 +204,43 @@ void DrawShapes(unsigned int VBO[], unsigned int VAO[], unsigned int EBO[])
     // ------------------------------------------------------------------
 
     float vertices[] = {
-        0.5f, 0.5f, 0.0f,
-        0.5f, 0.0f, 0.0f,
-        0.0f, 0.0f, 0.0f,
-        0.0f, 0.5f, 0.0f,
-        // first triangle
-        -0.9f, -0.5f, 0.0f, // left
-        -0.0f, -0.5f, 0.0f, // right
-        -0.45f, 0.5f, 0.0f, // top
-                            // second triangle
-        0.0f, -0.5f, 0.0f,  // left
-        0.9f, -0.5f, 0.0f,  // right
-        0.45f, 0.5f, 0.0f   // top
+        //     ---- 位置 ----       ---- 颜色 ----     - 纹理坐标 -
+        0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,   // 右上
+        0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,  // 右下
+        -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // 左下
+        -0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f   // 左上
+    };
+    float texCoords[] = {
+        0.0f, 0.0f, // 左下角
+        1.0f, 0.0f, // 右下角
+        0.5f, 1.0f  // 上中
     };
 
     unsigned int indices[] = {
-        0, 1, 2, // 第一个三角形
-        2, 3, 0, // 第二个三角形
-        4, 5, 6, // 第一个三角形
-        7, 8, 9  // 第二个三角形
-    };
+        0, 1, 2,
+        2, 3, 0};
+
+    // float vertices[] = {
+    //     0.5f, 0.5f, 0.0f,
+    //     0.5f, 0.0f, 0.0f,
+    //     0.0f, 0.0f, 0.0f,
+    //     0.0f, 0.5f, 0.0f,
+    //     // first triangle
+    //     -0.9f, -0.5f, 0.0f, // left
+    //     -0.0f, -0.5f, 0.0f, // right
+    //     -0.45f, 0.5f, 0.0f, // top
+    //                         // second triangle
+    //     0.0f, -0.5f, 0.0f,  // left
+    //     0.9f, -0.5f, 0.0f,  // right
+    //     0.45f, 0.5f, 0.0f   // top
+    // };
+
+    // unsigned int indices[] = {
+    //     0, 1, 2, // 第一个三角形
+    //     2, 3, 0, // 第二个三角形
+    //     4, 5, 6, // 第一个三角形
+    //     7, 8, 9  // 第二个三角形
+    // };
 
     glGenVertexArrays(1, VAO);
     glGenBuffers(1, VBO);
@@ -207,11 +254,15 @@ void DrawShapes(unsigned int VBO[], unsigned int VAO[], unsigned int EBO[])
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
     // position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(0);
+
     // color attribute
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
+    
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(6 * sizeof(float)));
+    glEnableVertexAttribArray(2);
 }
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
