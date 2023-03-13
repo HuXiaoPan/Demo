@@ -3,9 +3,12 @@
 #include <GLFW/glfw3.h>
 #include <cmath>
 #include "shader.h"
+#include "vertexData.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+
+Shader *ourShader = nullptr;
 
 // settings
 const unsigned int SCR_WIDTH = 800;
@@ -19,6 +22,8 @@ void DrawShapes(unsigned int VBO[], unsigned int VAO[], unsigned int EBO[]);
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window);
+
+void key_callback(GLFWwindow *window, int key, int scancode, int action, int mode);
 
 int main_test_OPGL(int argc, char const *argv[])
 {
@@ -46,15 +51,14 @@ int main_test_OPGL(int argc, char const *argv[])
 
     unsigned int texture[2];
     glGenTextures(2, texture);
-
+    stbi_set_flip_vertically_on_load(true); // tell stb_image.h to flip loaded texture's on the y-axis.
     glBindTexture(GL_TEXTURE_2D, texture[0]);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     int width, height, nrChannels;
-    stbi_set_flip_vertically_on_load(true); // tell stb_image.h to flip loaded texture's on the y-axis.
     unsigned char *data = stbi_load("res/container.jpg", &width, &height, &nrChannels, 0);
     if (data)
     {
@@ -68,10 +72,13 @@ int main_test_OPGL(int argc, char const *argv[])
     stbi_image_free(data);
 
     glBindTexture(GL_TEXTURE_2D, texture[1]);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    // float f[] = {1.0f, 0.0f, 0.0f, 0.0f};
+    // glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, f);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
     data = stbi_load("res/awesomeface.png", &width, &height, &nrChannels, 0);
     if (data)
     {
@@ -112,7 +119,6 @@ int main_test_OPGL(int argc, char const *argv[])
         float baseValue = (sin(timeValue) / 2.0f) + 0.5f;
         int vertexColorLocation = glGetUniformLocation(shaderProgram, "global_color");
         glUniform4f(vertexColorLocation, 1.0f - baseValue, baseValue, abs(baseValue * 2 - 1.0f), 1.0f);
-
 
         // bind textures on corresponding texture units
         glActiveTexture(GL_TEXTURE0);
@@ -165,6 +171,7 @@ GLFWwindow *InitWindow()
         return nullptr;
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glfwSetKeyCallback(window, key_callback);
     return window;
 }
 
@@ -177,102 +184,16 @@ bool InitGlad()
 
 unsigned int ComplierShadow()
 {
-
     // build and compile our shader program
     // ------------------------------------
-    Shader ourShader("res/vs.glsl", "res/fs.glsl"); // you can name your shader files however you like
-
-    /*
-    // build and compile our shader program
-    // ------------------------------------
-    // vertex shader
-    unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-    glCompileShader(vertexShader);
-    // check for shader compile errors
-    int success;
-    char infoLog[512];
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-    if (!success)
-    {
-        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n"
-                  << infoLog << std::endl;
-    }
-    // fragment shader
-    unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-    glCompileShader(fragmentShader);
-    // check for shader compile errors
-    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-    if (!success)
-    {
-        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n"
-                  << infoLog << std::endl;
-    }
-    // link shaders
-    unsigned int shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
-    // check for linking errors
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-    if (!success)
-    {
-        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n"
-                  << infoLog << std::endl;
-    }
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
-    */
-    return ourShader.ID;
+    ourShader = new Shader("res/vs.glsl", "res/fs.glsl"); // you can name your shader files however you like
+    return ourShader->ID;
 }
 
 void DrawShapes(unsigned int VBO[], unsigned int VAO[], unsigned int EBO[])
 {
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
-
-    float vertices[] = {
-        //     ---- 位置 ----       ---- 颜色 ----     - 纹理坐标 -
-        0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,   // 右上
-        0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,  // 右下
-        -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // 左下
-        -0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f   // 左上
-    };
-    float texCoords[] = {
-        0.0f, 0.0f, // 左下角
-        1.0f, 0.0f, // 右下角
-        0.5f, 1.0f  // 上中
-    };
-
-    unsigned int indices[] = {
-        0, 1, 2,
-        2, 3, 0};
-
-    // float vertices[] = {
-    //     0.5f, 0.5f, 0.0f,
-    //     0.5f, 0.0f, 0.0f,
-    //     0.0f, 0.0f, 0.0f,
-    //     0.0f, 0.5f, 0.0f,
-    //     // first triangle
-    //     -0.9f, -0.5f, 0.0f, // left
-    //     -0.0f, -0.5f, 0.0f, // right
-    //     -0.45f, 0.5f, 0.0f, // top
-    //                         // second triangle
-    //     0.0f, -0.5f, 0.0f,  // left
-    //     0.9f, -0.5f, 0.0f,  // right
-    //     0.45f, 0.5f, 0.0f   // top
-    // };
-
-    // unsigned int indices[] = {
-    //     0, 1, 2, // 第一个三角形
-    //     2, 3, 0, // 第二个三角形
-    //     4, 5, 6, // 第一个三角形
-    //     7, 8, 9  // 第二个三角形
-    // };
 
     glGenVertexArrays(1, VAO);
     glGenBuffers(1, VBO);
@@ -328,4 +249,29 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
     printf("OpenGL实现厂商的名字：%s\n", name);
     printf("渲染器标识符：%s\n", biaoshifu);
     printf("OpenGL实现的版本号：%s\n", OpenGLVersion);
+
+    if (key == GLFW_KEY_UP && action == GLFW_PRESS)
+    {
+        float value = 0.0f;
+        int a_base = glGetUniformLocation(ourShader->ID, "a");
+        glGetUniformfv(ourShader->ID, a_base, &value);
+        printf("value：%f\n", value);
+        if (value < 1.0f)
+            value += 0.1f;
+        if (value > 1.0f)
+            value = 1.0f;
+        glUniform1f(a_base, value);
+    }
+    else if (key == GLFW_KEY_DOWN && action == GLFW_PRESS)
+    {
+        float value = 0.0f;
+        int a_base = glGetUniformLocation(ourShader->ID, "a");
+        glGetUniformfv(ourShader->ID, a_base, &value);
+        printf("value：%f\n", value);
+        if (value > 0.0f)
+            value -= 0.1f;
+        if (value < 0.0f)
+            value = 0.0f;
+        glUniform1f(a_base, value);
+    }
 }
