@@ -4,12 +4,15 @@
 #include <cmath>
 #include "shader.h"
 #include "vertexData.h"
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtc/type_ptr.hpp"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
 Shader *ourShader = nullptr;
-
+glm::mat4 trans = glm::mat4(1.0f);
 // settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
@@ -27,6 +30,7 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 
 int main_test_OPGL(int argc, char const *argv[])
 {
+
     Init();
     GLFWwindow *window = InitWindow();
     if (window == NULL)
@@ -119,6 +123,8 @@ int main_test_OPGL(int argc, char const *argv[])
         float baseValue = (sin(timeValue) / 2.0f) + 0.5f;
         int vertexColorLocation = glGetUniformLocation(shaderProgram, "global_color");
         glUniform4f(vertexColorLocation, 1.0f - baseValue, baseValue, abs(baseValue * 2 - 1.0f), 1.0f);
+        unsigned int transformLoc = glGetUniformLocation(ourShader->ID, "transform");
+        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
 
         // bind textures on corresponding texture units
         glActiveTexture(GL_TEXTURE0);
@@ -232,7 +238,7 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height)
 {
     // make sure the viewport matches the new window dimensions; note that width and
     // height will be significantly larger than specified on retina displays.
-    glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
+    glViewport(0, 0, width, height);
 }
 
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mode)
@@ -261,6 +267,9 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
         if (value > 1.0f)
             value = 1.0f;
         glUniform1f(a_base, value);
+
+        trans = glm::translate(trans, glm::vec3(0.0f, 0.05f, 0.0f));
+        // trans = glm::scale(trans, glm::vec3(10, 10, 0.5));
     }
     else if (key == GLFW_KEY_DOWN && action == GLFW_PRESS)
     {
@@ -273,5 +282,39 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
         if (value < 0.0f)
             value = 0.0f;
         glUniform1f(a_base, value);
+
+        trans = glm::translate(trans, glm::vec3(0.0f, -0.05f, 0.0f));
+    }
+    else if (key == GLFW_KEY_LEFT && action == GLFW_PRESS)
+    {
+        trans = glm::translate(trans, glm::vec3(-0.05f, 0.0f, 0.0f));
+    }
+    else if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS)
+    {
+        trans = glm::translate(trans, glm::vec3(0.05f, 0.0f, 0.0f));
+    }
+    else if (key == GLFW_KEY_Z && action == GLFW_PRESS)
+    {
+        trans = glm::rotate(trans, 0.1f, glm::vec3(0.0, 1.0, 0.0));
+    }
+    else if (key == GLFW_KEY_C && action == GLFW_PRESS)
+    {
+        trans = glm::rotate(trans, -0.1f, glm::vec3(0.0, 1.0, 0.0));
+    }
+    else if (key == GLFW_KEY_A && action == GLFW_PRESS)
+    {
+        trans = glm::rotate(trans, 0.1f, glm::vec3(1.0, 0.0, 0.0));
+    }
+    else if (key == GLFW_KEY_D && action == GLFW_PRESS)
+    {
+        trans = glm::rotate(trans, -0.1f, glm::vec3(1.0, 0.0, 0.0));
+    }
+    else if (key == GLFW_KEY_Q && action == GLFW_PRESS)
+    {
+        trans = glm::rotate(trans, 0.1f, glm::vec3(0.0, 0.0, 1.0));
+    }
+    else if (key == GLFW_KEY_E && action == GLFW_PRESS)
+    {
+        trans = glm::rotate(trans, -0.1f, glm::vec3(0.0, 0.0, 1.0));
     }
 }
