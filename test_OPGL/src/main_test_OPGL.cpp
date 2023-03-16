@@ -12,6 +12,7 @@
 #include "stb_image.h"
 
 Shader *ourShader = nullptr;
+Shader *ourShader2 = nullptr;
 glm::mat4 trans = glm::mat4(1.0f);
 // settings
 const unsigned int SCR_WIDTH = 800;
@@ -20,7 +21,7 @@ const unsigned int SCR_HEIGHT = 600;
 void Init();
 GLFWwindow *InitWindow();
 bool InitGlad();
-unsigned int ComplierShadow();
+void ComplierShadow();
 void DrawShapes(unsigned int VBO[], unsigned int VAO[], unsigned int EBO[]);
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
@@ -46,13 +47,14 @@ int main_test_OPGL(int argc, char const *argv[])
         return -1;
     }
 
-    unsigned int shaderProgram = ComplierShadow();
-    unsigned int VBO[1], VAO[1], EBO[1];
+    ComplierShadow();
+    unsigned int VBO[2], VAO[2], EBO[2];
     DrawShapes(VBO, VAO, EBO);
     // You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other
     // VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
     // glBindVertexArray(0);
-
+    glUseProgram(ourShader->ID);
+    glBindVertexArray(VAO[0]);
     unsigned int texture[2];
     glGenTextures(2, texture);
     stbi_set_flip_vertically_on_load(true); // tell stb_image.h to flip loaded texture's on the y-axis.
@@ -98,12 +100,12 @@ int main_test_OPGL(int argc, char const *argv[])
 
     // tell opengl for each sampler to which texture unit it belongs to (only has to be done once)
     // -------------------------------------------------------------------------------------------
-    glUseProgram(shaderProgram);
+    glUseProgram(ourShader->ID);
     // either set it manually like so:
-    glUniform1i(glGetUniformLocation(shaderProgram, "texture1"), 0);
+    glUniform1i(glGetUniformLocation(ourShader->ID, "texture1"), 0);
     // or set it via the texture class
     // ourShader.setInt("texture2", 1);
-    glUniform1i(glGetUniformLocation(shaderProgram, "texture2"), 1);
+    glUniform1i(glGetUniformLocation(ourShader->ID, "texture2"), 1);
     // uncomment this call to draw in wireframe polygons.
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     // render loop
@@ -123,12 +125,14 @@ int main_test_OPGL(int argc, char const *argv[])
         glm::vec3(-1.3f, 1.0f, -1.5f)};
     while (!glfwWindowShouldClose(window))
     {
-
+        glUseProgram(ourShader->ID);
+        glBindVertexArray(VAO[0]);
         glm::mat4 view = glm::mat4(1.0f);
         glm::mat4 projection = glm::mat4(1.0f);
         // model = glm::rotate(model, sin((float)glfwGetTime()) * glm::radians(-55.0f), glm::vec3(0.5f, 1.0f, 0.0f));
         view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
         projection = glm::perspective(glm::radians(45.0f), 1.0f * SCR_WIDTH / SCR_HEIGHT, 0.1f, 100.0f);
+
         // input
         // -----
         processInput(window);
@@ -140,7 +144,7 @@ int main_test_OPGL(int argc, char const *argv[])
 
         float timeValue = glfwGetTime();
         float baseValue = (sin(timeValue) / 2.0f) + 0.5f;
-        int vertexColorLocation = glGetUniformLocation(shaderProgram, "global_color");
+        int vertexColorLocation = glGetUniformLocation(ourShader->ID, "global_color");
         glUniform4f(vertexColorLocation, 1.0f - baseValue, baseValue, abs(baseValue * 2 - 1.0f), 1.0f);
         unsigned int transformLoc = glGetUniformLocation(ourShader->ID, "transform");
         glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
@@ -172,6 +176,24 @@ int main_test_OPGL(int argc, char const *argv[])
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
 
+        // tell opengl for each sampler to which texture unit it belongs to (only has to be done once)
+        // -------------------------------------------------------------------------------------------
+        glUseProgram(ourShader2->ID);
+        // glEnable(GL_DEPTH_TEST);
+        glm::mat4 c_view = glm::mat4(1.0f);
+        glm::mat4 c_projection = glm::mat4(1.0f);
+        glm::mat4 c_model = glm::mat4(1.0f);
+        c_model = glm::rotate(c_model, glm::radians(-55.0f), glm::vec3(0.5f, 1.0f, 0.0f));
+        c_view = glm::translate(c_view, glm::vec3(0.0f, 0.0f, -3.0f));
+        c_projection = glm::perspective(glm::radians(45.0f), 1.0f * SCR_WIDTH / SCR_HEIGHT, 0.1f, 100.0f);
+        unsigned int c_modelLoc = glGetUniformLocation(ourShader2->ID, "c_model");
+        glUniformMatrix4fv(c_modelLoc, 1, GL_FALSE, glm::value_ptr(c_model));
+        unsigned int c_viewLoc = glGetUniformLocation(ourShader2->ID, "c_view");
+        glUniformMatrix4fv(c_viewLoc, 1, GL_FALSE, glm::value_ptr(c_view));
+        unsigned int c_projectionLoc = glGetUniformLocation(ourShader2->ID, "c_projection");
+        glUniformMatrix4fv(c_projectionLoc, 1, GL_FALSE, glm::value_ptr(c_projection));
+        glBindVertexArray(VAO[1]);
+        glDrawArrays(GL_LINES, 0, 6);
         // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[0]);
         // glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
@@ -186,7 +208,7 @@ int main_test_OPGL(int argc, char const *argv[])
     glDeleteVertexArrays(1, VAO);
     glDeleteBuffers(1, VBO);
     glDeleteBuffers(1, EBO);
-    glDeleteProgram(shaderProgram);
+    glDeleteProgram(ourShader->ID);
 
     // glfw: terminate, clearing all previously allocated GLFW resources.
     // ------------------------------------------------------------------
@@ -227,12 +249,12 @@ bool InitGlad()
     return gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 }
 
-unsigned int ComplierShadow()
+void ComplierShadow()
 {
     // build and compile our shader program
     // ------------------------------------
     ourShader = new Shader("res/vs.glsl", "res/fs.glsl"); // you can name your shader files however you like
-    return ourShader->ID;
+    ourShader2 = new Shader("res/cood_vs.glsl", "res/cood_fs.glsl");
 }
 
 void DrawShapes(unsigned int VBO[], unsigned int VAO[], unsigned int EBO[])
@@ -240,10 +262,10 @@ void DrawShapes(unsigned int VBO[], unsigned int VAO[], unsigned int EBO[])
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
 
-    glGenVertexArrays(1, VAO);
-    glGenBuffers(1, VBO);
-    glGenBuffers(1, EBO);
-
+    glGenVertexArrays(2, VAO);
+    glGenBuffers(2, VBO);
+    glGenBuffers(2, EBO);
+    glUseProgram(ourShader->ID);
     // bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
     glBindVertexArray(VAO[0]);
     glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
@@ -260,6 +282,15 @@ void DrawShapes(unsigned int VBO[], unsigned int VAO[], unsigned int EBO[])
     // glEnableVertexAttribArray(1);
 
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
+    glUseProgram(ourShader2->ID);
+    glBindVertexArray(VAO[1]);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(coordinateLine), coordinateLine, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 }
 
