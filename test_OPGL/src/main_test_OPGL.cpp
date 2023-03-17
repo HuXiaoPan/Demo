@@ -14,9 +14,24 @@
 Shader *ourShader = nullptr;
 Shader *ourShader2 = nullptr;
 glm::mat4 trans = glm::mat4(1.0f);
+
+glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+
+float deltaTime = 0.0f; // 当前帧与上一帧的时间差
+float lastFrame = 0.0f; // 上一帧的时间
+
+float pitch = 0.0f, yaw = 0.0f;
+float fov = 45.0f;
+
 // settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
+
+float lastX = SCR_WIDTH / 2, lastY = SCR_HEIGHT / 2;
+
+bool firstMouse = true;
 
 void Init();
 GLFWwindow *InitWindow();
@@ -28,6 +43,8 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window);
 
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mode);
+void mouse_callback(GLFWwindow *window, double xpos, double ypos);
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
 int main_test_OPGL(int argc, char const *argv[])
 {
@@ -46,7 +63,6 @@ int main_test_OPGL(int argc, char const *argv[])
         glfwTerminate();
         return -1;
     }
-
     ComplierShadow();
     unsigned int VBO[2], VAO[2], EBO[2];
     DrawShapes(VBO, VAO, EBO);
@@ -123,15 +139,24 @@ int main_test_OPGL(int argc, char const *argv[])
         glm::vec3(1.5f, 2.0f, -2.5f),
         glm::vec3(1.5f, 0.2f, -1.5f),
         glm::vec3(-1.3f, 1.0f, -1.5f)};
+    float a1 = 0.0f;
     while (!glfwWindowShouldClose(window))
     {
+
+        float currentFrame = glfwGetTime();
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
         glUseProgram(ourShader->ID);
         glBindVertexArray(VAO[0]);
+
         glm::mat4 view = glm::mat4(1.0f);
+        view = glm::lookAt(cameraPos,
+                           cameraPos + cameraFront,
+                           cameraUp);
         glm::mat4 projection = glm::mat4(1.0f);
         // model = glm::rotate(model, sin((float)glfwGetTime()) * glm::radians(-55.0f), glm::vec3(0.5f, 1.0f, 0.0f));
-        view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
-        projection = glm::perspective(glm::radians(45.0f), 1.0f * SCR_WIDTH / SCR_HEIGHT, 0.1f, 100.0f);
+        // view = glm::translate(view, glm::vec3(-5.0f, -5.0f, -10.0f));
+        projection = glm::perspective(glm::radians(fov), 1.0f * SCR_WIDTH / SCR_HEIGHT, 0.1f, 100.0f);
 
         // input
         // -----
@@ -180,18 +205,14 @@ int main_test_OPGL(int argc, char const *argv[])
         // -------------------------------------------------------------------------------------------
         glUseProgram(ourShader2->ID);
         // glEnable(GL_DEPTH_TEST);
-        glm::mat4 c_view = glm::mat4(1.0f);
-        glm::mat4 c_projection = glm::mat4(1.0f);
         glm::mat4 c_model = glm::mat4(1.0f);
-        c_model = glm::rotate(c_model, glm::radians(-55.0f), glm::vec3(0.5f, 1.0f, 0.0f));
-        c_view = glm::translate(c_view, glm::vec3(0.0f, 0.0f, -3.0f));
-        c_projection = glm::perspective(glm::radians(45.0f), 1.0f * SCR_WIDTH / SCR_HEIGHT, 0.1f, 100.0f);
+        // c_model = glm::rotate(c_model, glm::radians(-55.0f), glm::vec3(0.5f, 1.0f, 0.0f));
         unsigned int c_modelLoc = glGetUniformLocation(ourShader2->ID, "c_model");
         glUniformMatrix4fv(c_modelLoc, 1, GL_FALSE, glm::value_ptr(c_model));
         unsigned int c_viewLoc = glGetUniformLocation(ourShader2->ID, "c_view");
-        glUniformMatrix4fv(c_viewLoc, 1, GL_FALSE, glm::value_ptr(c_view));
+        glUniformMatrix4fv(c_viewLoc, 1, GL_FALSE, glm::value_ptr(view));
         unsigned int c_projectionLoc = glGetUniformLocation(ourShader2->ID, "c_projection");
-        glUniformMatrix4fv(c_projectionLoc, 1, GL_FALSE, glm::value_ptr(c_projection));
+        glUniformMatrix4fv(c_projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
         glBindVertexArray(VAO[1]);
         glDrawArrays(GL_LINES, 0, 6);
         // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[0]);
@@ -237,8 +258,11 @@ GLFWwindow *InitWindow()
     if (window == NULL)
         return nullptr;
     glfwMakeContextCurrent(window);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetKeyCallback(window, key_callback);
+    glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetScrollCallback(window, scroll_callback);
     return window;
 }
 
@@ -300,6 +324,15 @@ void processInput(GLFWwindow *window)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
+    float cameraSpeed = 2.5f * deltaTime;
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        cameraPos += cameraSpeed * cameraFront;
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        cameraPos -= cameraSpeed * cameraFront;
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
@@ -371,14 +404,14 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
     {
         trans = glm::rotate(trans, -0.1f, glm::vec3(0.0, 1.0, 0.0));
     }
-    else if (key == GLFW_KEY_A && action == GLFW_PRESS)
-    {
-        trans = glm::rotate(trans, 0.1f, glm::vec3(1.0, 0.0, 0.0));
-    }
-    else if (key == GLFW_KEY_D && action == GLFW_PRESS)
-    {
-        trans = glm::rotate(trans, -0.1f, glm::vec3(1.0, 0.0, 0.0));
-    }
+    // else if (key == GLFW_KEY_A && action == GLFW_PRESS)
+    // {
+    //     trans = glm::rotate(trans, 0.1f, glm::vec3(1.0, 0.0, 0.0));
+    // }
+    // else if (key == GLFW_KEY_D && action == GLFW_PRESS)
+    // {
+    //     trans = glm::rotate(trans, -0.1f, glm::vec3(1.0, 0.0, 0.0));
+    // }
     else if (key == GLFW_KEY_Q && action == GLFW_PRESS)
     {
         trans = glm::rotate(trans, 0.1f, glm::vec3(0.0, 0.0, 1.0));
@@ -387,4 +420,47 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
     {
         trans = glm::rotate(trans, -0.1f, glm::vec3(0.0, 0.0, 1.0));
     }
+}
+
+void mouse_callback(GLFWwindow *window, double xpos, double ypos)
+{
+
+    if (firstMouse) // 这个bool变量初始时是设定为true的
+    {
+        lastX = xpos;
+        lastY = ypos;
+        firstMouse = false;
+    }
+    float xoffset = xpos - lastX;
+    float yoffset = lastY - ypos; // 注意这里是相反的，因为y坐标是从底部往顶部依次增大的
+    lastX = xpos;
+    lastY = ypos;
+
+    float sensitivity = 0.05f;
+    xoffset *= sensitivity;
+    yoffset *= sensitivity;
+
+    yaw += xoffset;
+    pitch += yoffset;
+
+    if (pitch > 89.0f)
+        pitch = 89.0f;
+    if (pitch < -89.0f)
+        pitch = -89.0f;
+
+    glm::vec3 front;
+    front.x = cos(glm::radians(pitch)) * cos(glm::radians(yaw));
+    front.y = sin(glm::radians(pitch));
+    front.z = cos(glm::radians(pitch)) * sin(glm::radians(yaw));
+    cameraFront = glm::normalize(front);
+}
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+  if(fov >= 1.0f && fov <= 45.0f)
+    fov -= yoffset;
+  if(fov <= 1.0f)
+    fov = 1.0f;
+  if(fov >= 45.0f)
+    fov = 45.0f;
 }
