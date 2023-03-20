@@ -17,7 +17,7 @@ layout (location = 1) in vec2 aTexCoord;
 out vec3 ourColor;
 out vec2 TexCoord;
 
-uniform mat4 transform;
+// uniform mat4 transform;
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
@@ -25,7 +25,7 @@ uniform mat4 projection;
 uniform vec4 global_color;
 void main()
 {
-    gl_Position = transform * projection * view * model * vec4(aPos, 1.0);
+    gl_Position = /*transform * */projection * view * model * vec4(aPos, 1.0);
     // ourColor = aColor;
     ourColor = global_color.rgb;
     TexCoord = aTexCoord;

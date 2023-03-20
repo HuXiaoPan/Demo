@@ -1,7 +1,8 @@
 #include <iostream>
-#include "glad.h"
-#include <GLFW/glfw3.h>
 #include <cmath>
+#include <GLFW/glfw3.h>
+#include "glad.h"
+#include "WindowHelper.h"
 #include "shader.h"
 #include "vertexData.h"
 #include "glm/glm.hpp"
@@ -11,8 +12,6 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-Shader *ourShader = nullptr;
-Shader *ourShader2 = nullptr;
 glm::mat4 trans = glm::mat4(1.0f);
 
 glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
@@ -24,20 +23,11 @@ float lastFrame = 0.0f; // 上一帧的时间
 
 float pitch = 0.0f, yaw = 0.0f;
 float fov = 45.0f;
-
-// settings
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
-
 float lastX = SCR_WIDTH / 2, lastY = SCR_HEIGHT / 2;
-
 bool firstMouse = true;
 
-void Init();
-GLFWwindow *InitWindow();
-bool InitGlad();
-void ComplierShadow();
 void DrawShapes(unsigned int VBO[], unsigned int VAO[], unsigned int EBO[]);
+void LoadTexture(unsigned int VAO, unsigned int texture[]);
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window);
@@ -48,80 +38,43 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
 int main_test_OPGL(int argc, char const *argv[])
 {
-
-    Init();
-    GLFWwindow *window = InitWindow();
+    WindowHelper WindowHelper;
+    WindowHelper.Init();
+    GLFWwindow *window = WindowHelper.InitWindow();
     if (window == NULL)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
         return -1;
     }
-    if (!InitGlad())
+    if (!WindowHelper.InitGlad())
     {
         std::cout << "Failed to initialize GLAD" << std::endl;
         glfwTerminate();
         return -1;
     }
-    ComplierShadow();
+    // build and compile our shader program
+    // ------------------------------------
+    Shader ourShader("res/vs.glsl", "res/fs.glsl"); // you can name your shader files however you like
+    Shader ourShader2 = Shader("res/cood_vs.glsl", "res/cood_fs.glsl");
+
     unsigned int VBO[2], VAO[2], EBO[2];
     DrawShapes(VBO, VAO, EBO);
-    // You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other
+    // You can unbind the VAO afterwards so other VAO c#include "GLFW/glfw3.h"alls won't accidentally modify this VAO, but this rarely happens. Modifying other
     // VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
     // glBindVertexArray(0);
-    glUseProgram(ourShader->ID);
-    glBindVertexArray(VAO[0]);
     unsigned int texture[2];
-    glGenTextures(2, texture);
-    stbi_set_flip_vertically_on_load(true); // tell stb_image.h to flip loaded texture's on the y-axis.
-    glBindTexture(GL_TEXTURE_2D, texture[0]);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-    int width, height, nrChannels;
-    unsigned char *data = stbi_load("res/container.jpg", &width, &height, &nrChannels, 0);
-    if (data)
-    {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-    }
-    else
-    {
-        std::cout << "Failed to load texture" << std::endl;
-    }
-    stbi_image_free(data);
-
-    glBindTexture(GL_TEXTURE_2D, texture[1]);
-    // float f[] = {1.0f, 0.0f, 0.0f, 0.0f};
-    // glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, f);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-    data = stbi_load("res/awesomeface.png", &width, &height, &nrChannels, 0);
-    if (data)
-    {
-        // note that the awesomeface.png has transparency and thus an alpha channel, so make sure to tell OpenGL the data type is of GL_RGBA
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-    }
-    else
-    {
-        std::cout << "Failed to load texture" << std::endl;
-    }
-    stbi_image_free(data);
-
+    LoadTexture(VAO[0], texture);
     // tell opengl for each sampler to which texture unit it belongs to (only has to be done once)
     // -------------------------------------------------------------------------------------------
-    glUseProgram(ourShader->ID);
+    ourShader.use();
     // either set it manually like so:
-    glUniform1i(glGetUniformLocation(ourShader->ID, "texture1"), 0);
+    // glUniform1i(glGetUniformLocation(ourShader->ID, "texture1"), 0);
+    ourShader.setInt("texture1", 0);
     // or set it via the texture class
     // ourShader.setInt("texture2", 1);
-    glUniform1i(glGetUniformLocation(ourShader->ID, "texture2"), 1);
+    // glUniform1i(glGetUniformLocation(ourShader->ID, "texture2"), 1);
+    ourShader.setInt("texture1", 1);
     // uncomment this call to draw in wireframe polygons.
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     // render loop
@@ -146,7 +99,7 @@ int main_test_OPGL(int argc, char const *argv[])
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
-        glUseProgram(ourShader->ID);
+        glUseProgram(ourShader.ID);
         glBindVertexArray(VAO[0]);
 
         glm::mat4 view = glm::mat4(1.0f);
@@ -237,48 +190,11 @@ int main_test_OPGL(int argc, char const *argv[])
     return 0;
 }
 
-void Init()
-{
-    // glfw: initialize and configure
-    glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-#ifdef __APPLE__
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-#endif
-}
-
-GLFWwindow *InitWindow()
-{
-    // glfw window creation
-    // --------------------
-    GLFWwindow *window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "MapView", NULL, NULL);
-    if (window == NULL)
-        return nullptr;
-    glfwMakeContextCurrent(window);
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    glfwSetKeyCallback(window, key_callback);
-    glfwSetCursorPosCallback(window, mouse_callback);
-    glfwSetScrollCallback(window, scroll_callback);
-    return window;
-}
-
 bool InitGlad()
 {
     // glad: load all OpenGL function pointers
     // ---------------------------------------
     return gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
-}
-
-void ComplierShadow()
-{
-    // build and compile our shader program
-    // ------------------------------------
-    ourShader = new Shader("res/vs.glsl", "res/fs.glsl"); // you can name your shader files however you like
-    ourShader2 = new Shader("res/cood_vs.glsl", "res/cood_fs.glsl");
 }
 
 void DrawShapes(unsigned int VBO[], unsigned int VAO[], unsigned int EBO[])
@@ -289,7 +205,6 @@ void DrawShapes(unsigned int VBO[], unsigned int VAO[], unsigned int EBO[])
     glGenVertexArrays(2, VAO);
     glGenBuffers(2, VBO);
     glGenBuffers(2, EBO);
-    glUseProgram(ourShader->ID);
     // bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
     glBindVertexArray(VAO[0]);
     glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
@@ -308,7 +223,7 @@ void DrawShapes(unsigned int VBO[], unsigned int VAO[], unsigned int EBO[])
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
-    glUseProgram(ourShader2->ID);
+    // glUseProgram(ourShader2->ID);
     glBindVertexArray(VAO[1]);
     glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(coordinateLine), coordinateLine, GL_STATIC_DRAW);
@@ -316,6 +231,52 @@ void DrawShapes(unsigned int VBO[], unsigned int VAO[], unsigned int EBO[])
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
+}
+
+void LoadTexture(unsigned int VAO, unsigned int texture[])
+{
+    glBindVertexArray(VAO);
+    glGenTextures(2, texture);
+    // stbi_set_flip_vertically_on_load(true); // tell stb_image.h to flip loaded texture's on the y-axis.
+    glBindTexture(GL_TEXTURE_2D, texture[0]);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    int width, height, nrChannels;
+    unsigned char *data = stbi_load("res/container.jpg", &width, &height, &nrChannels, 0);
+    if (data)
+    {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else
+    {
+        std::cout << "Failed to load texture" << std::endl;
+    }
+    stbi_image_free(data);
+
+    glBindTexture(GL_TEXTURE_2D, texture[1]);
+    // float f[] = {1.0f, 0.0f, 0.0f, 0.0f};
+    // glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, f);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    data = stbi_load("res/awesomeface.png", &width, &height, &nrChannels, 0);
+    if (data)
+    {
+        // note that the awesomeface.png has transparency and thus an alpha channel, so make sure to tell OpenGL the data type is of GL_RGBA
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else
+    {
+        std::cout << "Failed to load texture" << std::endl;
+    }
+    stbi_image_free(data);
 }
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
