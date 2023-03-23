@@ -2,7 +2,9 @@
 #include "glad.h"
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
+#include "shader.h"
 
+#include "shape_base.h"
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height)
 {
@@ -12,14 +14,20 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height)
 
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mode)
 {
+    if (WindowHelper::curr_winHelper)
+        WindowHelper::curr_winHelper->key_callback(window, key, scancode, action, mode);
 }
 
 void mouse_callback(GLFWwindow *window, double xpos, double ypos)
 {
+    if (WindowHelper::curr_winHelper)
+        WindowHelper::curr_winHelper->mouse_callback(window, xpos, ypos);
 }
 
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
 {
+    if (WindowHelper::curr_winHelper)
+        WindowHelper::curr_winHelper->scroll_callback(window, xoffset, yoffset);
 }
 
 WindowHelper *WindowHelper::curr_winHelper = nullptr;
@@ -30,9 +38,9 @@ WindowHelper::WindowHelper(char *title, unsigned int width, unsigned int height)
 
 WindowHelper::~WindowHelper()
 {
+    glfwTerminate();
 }
-
-void WindowHelper::Init()
+GLFWwindow *WindowHelper::GetWindow()
 {
     // glfw: initialize and configure
     glfwInit();
@@ -43,10 +51,6 @@ void WindowHelper::Init()
 #ifdef __APPLE__
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
-}
-
-GLFWwindow *WindowHelper::GetWindow()
-{
     if (window)
         return window;
     // glfw window creation
@@ -57,9 +61,7 @@ GLFWwindow *WindowHelper::GetWindow()
     glfwMakeContextCurrent(window);
     // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetFramebufferSizeCallback(window, ::framebuffer_size_callback);
-    // glfwSetKeyCallback(window, key_callback);
-    // glfwSetCursorPosCallback(window, mouse_callback);
-    // glfwSetScrollCallback(window, scroll_callback);
+
     return window;
 }
 
@@ -67,6 +69,14 @@ bool WindowHelper::InitGlad()
 {
     return gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 }
+
+void WindowHelper::Init()
+{
+    // build and compile our shader program
+    shape_base::shaders[0] = new Shader("res/vs_vc7f.glsl", "res/fs_vc7f.glsl"); // you can name your shader files however you like
+    // shape_base::shaders[1] = new Shader("res/vs.glsl", "res/fs.glsl");
+}
+
 
 void WindowHelper::processInput()
 {
@@ -90,6 +100,26 @@ void WindowHelper::framebuffer_size_callback(GLFWwindow *window, int width, int 
     this->width = width;
     this->height = height;
     glViewport(0, 0, width, height);
+}
+
+void WindowHelper::draw()
+{
+    while (!glfwWindowShouldClose(window))
+    {
+        updateDeltaTime();
+        // input
+        processInput();
+        // render
+        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        for(auto var : shp_map)
+        {
+            var.second->draw();
+        }
+        // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+    }
 }
 
 void WindowHelper::key_callback(GLFWwindow *window, int key, int scancode, int action, int mode)
@@ -211,4 +241,12 @@ void WindowHelper::scroll_callback(GLFWwindow *window, double xoffset, double yo
     //     fov = 1.0f;
     //   if(fov >= 45.0f)
     //     fov = 45.0f;
+}
+
+float WindowHelper::updateDeltaTime()
+{
+    float currentFrame = glfwGetTime();
+    deltaTime = currentFrame - lastFrame;
+    lastFrame = currentFrame;
+    return 0.0f;
 }
