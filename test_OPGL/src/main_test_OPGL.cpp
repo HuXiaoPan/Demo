@@ -5,6 +5,8 @@
 #include "WindowHelper.h"
 #include "vertexData.h"
 #include "shape_line.h"
+#include "shape_point.h"
+#include "shape_polygon.h"
 
 glm::mat4 trans = glm::mat4(1.0f);
 glm::vec3 cubePositions[] = {
@@ -42,7 +44,40 @@ int main_test_OPGL(int argc, char const *argv[])
     // render loop
     glEnable(GL_DEPTH_TEST);
 
-    shape_line coord(coordinateLine, sizeof(coordinateLine));
+    shape_line coord_l(coordinateLine, sizeof(coordinateLine));
+    float p[4207] = {0.0f};
+    p[0] = 0.0f;
+    p[1] = 0.0f;
+    p[2] = 0.0f;
+    p[3] = 1.0f;
+    p[4] = 1.0f;
+    p[5] = 1.0f;
+    p[6] = 1.0f;
+    for (int i = 0; i < 100; ++i)
+    {
+        p[(100 + i + 1) * 7] = i + 1;
+        p[(100 + i + 1) * 7 + 3] = 1.0f;
+        p[(100 + i + 1) * 7 + 6] = 1.0f;
+        p[(100 - i) * 7] = -(i + 1);
+        p[(100 - i) * 7 + 3] = 1.0f;
+        p[(100 - i) * 7 + 6] = 1.0f;
+
+        p[(300 + i + 1) * 7 + 1] = i + 1;
+        p[(300 + i + 1) * 7 + 4] = 1.0f;
+        p[(300 + i + 1) * 7 + 6] = 1.0f;
+        p[(300 - i) * 7 + 1] = -(i + 1);
+        p[(300 - i) * 7 + 4] = 1.0f;
+        p[(300 - i) * 7 + 6] = 1.0f;
+
+        p[(500 + i + 1) * 7 + 2] = i + 1;
+        p[(500 + i + 1) * 7 + 5] = 1.0f;
+        p[(500 + i + 1) * 7 + 6] = 1.0f;
+        p[(500 - i) * 7 + 2] = -(i + 1);
+        p[(500 - i) * 7 + 5] = 1.0f;
+        p[(500 - i) * 7 + 6] = 1.0f;
+    }
+    shape_point coord_p(p, sizeof(p));
+    shape_polygon plat(coordinatePlat, sizeof(coordinatePlat), elem_Plat, sizeof(elem_Plat));
 
     // // ourShader.use();
     // painter painter;
@@ -50,14 +85,14 @@ int main_test_OPGL(int argc, char const *argv[])
     // tell opengl for each sampler to which texture unit it belongs to (only has to be done once)
     // ourShader.setInt("texture1", 0);
     // ourShader.setInt("texture2", 1);
-    WindowHelper.shp_map["coord"] = &coord;
+    WindowHelper.shp_map["coord_l"] = &coord_l;
+    WindowHelper.shp_map["coord_p"] = &coord_p;
+    WindowHelper.shp_map["plat"] = &plat;
     WindowHelper.draw();
     // while (!glfwWindowShouldClose(window))
     // {
     //     // ourShader.use();
     //     glBindVertexArray(painter.VAO[0]);
-
-
 
     //     // float timeValue = glfwGetTime();
     //     // float baseValue = (sin(timeValue) / 2.0f) + 0.5f;
@@ -92,8 +127,6 @@ int main_test_OPGL(int argc, char const *argv[])
 
     //     //     glDrawArrays(GL_TRIANGLES, 0, 36);
     //     // }
-
-
 
     // }
     return 0;

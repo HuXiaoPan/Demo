@@ -5,6 +5,7 @@
 #include <map>
 class GLFWwindow;
 class shape_base;
+class Camera;
 
 class WindowHelper
 {
@@ -14,6 +15,8 @@ public:
 
 
 private:
+
+    bool mouse_button_right = false;
     // settings
     unsigned int width;
     unsigned int height;
@@ -21,6 +24,10 @@ private:
     GLFWwindow *window;
     float deltaTime = 0.0f; // 当前帧与上一帧的时间差
     float lastFrame = 0.0f; // 上一帧的时间
+
+    Camera *camera;
+    float lastX;
+    float lastY;
 
 
 public:

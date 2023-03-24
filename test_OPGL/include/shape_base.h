@@ -1,11 +1,6 @@
 #ifndef SHAPE_BASE_H
 #define SHAPE_BASE_H
 
-
-#include "glm/glm.hpp"
-#include "glm/gtc/matrix_transform.hpp"
-#include "glm/gtc/type_ptr.hpp"
-
 #include "shader.h"
 
 class Shader;
@@ -18,10 +13,16 @@ protected:
     unsigned int EBO;
     unsigned int *texture;
     char shader_idx;
+    unsigned int size;
+    unsigned int size_ebo;
 
 public:
+    glm::mat4 model = glm::mat4(1.0f);
+    glm::mat4 view = glm::mat4(1.0f);
+    glm::mat4 projection = glm::mat4(1.0f);
+
     static Shader *shaders[shader_num];
-    shape_base(char shader_idx);
+    shape_base(char shader_idx = 0);
     ~shape_base();
     virtual void draw() = 0;
 };

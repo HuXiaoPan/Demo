@@ -17,21 +17,30 @@ Camera::Camera(float posX, float posY, float posZ, float upX, float upY, float u
     Pitch = pitch;
     updateCameraVectors();
 }
+#include <iostream>
 glm::mat4 Camera::GetViewMatrix()
 {
+    // std::cout << " fx: " << Front.x << " fy: " << Front.y << " fz: " << Front.z << std::endl;
+    // std::cout << " ux: " << Up.x << " ux: " << Up.y << " ux: " << Up.z << std::endl;
+    // std::cout << " rx: " << Right.x << " ry: " << Right.y << " rz: " << Right.z << std::endl;
+
     return glm::lookAt(Position, Position + Front, Up);
 }
 void Camera::ProcessKeyboard(Camera_Movement direction, float deltaTime)
 {
     float velocity = MovementSpeed * deltaTime;
     if (direction == FORWARD)
-        Position += Front * velocity;
+        Position -= glm::normalize(glm::cross(Right, WorldUp)) * velocity;
     if (direction == BACKWARD)
-        Position -= Front * velocity;
+        Position += glm::normalize(glm::cross(Right, WorldUp)) * velocity;
     if (direction == LEFT)
         Position -= Right * velocity;
     if (direction == RIGHT)
         Position += Right * velocity;
+    if (direction == UP)
+        Position += WorldUp * velocity;
+    if (direction == DOWN)
+        Position -= WorldUp * velocity;
 }
 void Camera::ProcessMouseMovement(float xoffset, float yoffset, GLboolean constrainPitch)
 {
@@ -49,7 +58,6 @@ void Camera::ProcessMouseMovement(float xoffset, float yoffset, GLboolean constr
         if (Pitch < -89.0f)
             Pitch = -89.0f;
     }
-
     // update Front, Right and Up Vectors using the updated Euler angles
     updateCameraVectors();
 }
@@ -61,6 +69,7 @@ void Camera::ProcessMouseScroll(float yoffset)
     if (Zoom > 45.0f)
         Zoom = 45.0f;
 }
+
 void Camera::updateCameraVectors()
 {
     // calculate the new Front vector

@@ -5,6 +5,7 @@
 #include "shader.h"
 
 #include "shape_base.h"
+#include "camera.h"
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height)
 {
@@ -61,7 +62,9 @@ GLFWwindow *WindowHelper::GetWindow()
     glfwMakeContextCurrent(window);
     // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetFramebufferSizeCallback(window, ::framebuffer_size_callback);
-
+    glfwSetKeyCallback(window, ::key_callback);
+    glfwSetCursorPosCallback(window, ::mouse_callback);
+    glfwSetScrollCallback(window, ::scroll_callback);
     return window;
 }
 
@@ -72,25 +75,36 @@ bool WindowHelper::InitGlad()
 
 void WindowHelper::Init()
 {
+    glEnable(GL_BLEND); // 打开混合
+    glEnable(GL_DEPTH_TEST);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE); // 基于源象素alpha通道值的半透明混合函数
     // build and compile our shader program
     shape_base::shaders[0] = new Shader("res/vs_vc7f.glsl", "res/fs_vc7f.glsl"); // you can name your shader files however you like
     // shape_base::shaders[1] = new Shader("res/vs.glsl", "res/fs.glsl");
+    camera = new Camera(glm::vec3(1.0f, 1.0f, 3.0f));
 }
-
 
 void WindowHelper::processInput()
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
-    // float cameraSpeed = 2.5f * deltaTime;
-    // if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-    //     cameraPos += cameraSpeed * cameraFront;
-    // if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-    //     cameraPos -= cameraSpeed * cameraFront;
-    // if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-    //     cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
-    // if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-    //     cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+    float cameraSpeed = 2.5f * deltaTime;
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        camera->ProcessKeyboard(Camera_Movement::FORWARD, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        camera->ProcessKeyboard(Camera_Movement::BACKWARD, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        camera->ProcessKeyboard(Camera_Movement::LEFT, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        camera->ProcessKeyboard(Camera_Movement::RIGHT, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+        camera->ProcessKeyboard(Camera_Movement::UP, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+        camera->ProcessKeyboard(Camera_Movement::DOWN, deltaTime);
+    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
+        mouse_button_right = true;
+    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_RELEASE)
+        mouse_button_right = false;
 }
 
 void WindowHelper::framebuffer_size_callback(GLFWwindow *window, int width, int height)
@@ -112,8 +126,9 @@ void WindowHelper::draw()
         // render
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        for(auto var : shp_map)
+        for (auto var : shp_map)
         {
+            var.second->view = camera->GetViewMatrix();
             var.second->draw();
         }
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
@@ -202,44 +217,21 @@ void WindowHelper::key_callback(GLFWwindow *window, int key, int scancode, int a
 
 void WindowHelper::mouse_callback(GLFWwindow *window, double xpos, double ypos)
 {
-
-    //     if (firstMouse) // 这个bool变量初始时是设定为true的
-    //     {
-    //         lastX = xpos;
-    //         lastY = ypos;
-    //         firstMouse = false;
-    //     }
-    //     float xoffset = xpos - lastX;
-    //     float yoffset = lastY - ypos; // 注意这里是相反的，因为y坐标是从底部往顶部依次增大的
-    //     lastX = xpos;
-    //     lastY = ypos;
-
-    //     float sensitivity = 0.05f;
-    //     xoffset *= sensitivity;
-    //     yoffset *= sensitivity;
-
-    //     yaw += xoffset;
-    //     pitch += yoffset;
-
-    //     if (pitch > 89.0f)
-    //         pitch = 89.0f;
-    //     if (pitch < -89.0f)
-    //         pitch = -89.0f;
-
-    //     glm::vec3 front;
-    //     front.x = cos(glm::radians(pitch)) * cos(glm::radians(yaw));
-    //     front.y = sin(glm::radians(pitch));
-    //     front.z = cos(glm::radians(pitch)) * sin(glm::radians(yaw));
-    //     cameraFront = glm::normalize(front);
+    float deltaX = xpos - lastX;
+    float deltaY = ypos - lastY;
+    lastX = xpos;
+    lastY = ypos;
+    if (mouse_button_right)
+        camera->ProcessMouseMovement(-deltaX, deltaY);
 }
 
 void WindowHelper::scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
 {
-    //   if(fov >= 1.0f && fov <= 45.0f)
+    // if (fov >= 1.0f && fov <= 45.0f)
     //     fov -= yoffset;
-    //   if(fov <= 1.0f)
+    // if (fov <= 1.0f)
     //     fov = 1.0f;
-    //   if(fov >= 45.0f)
+    // if (fov >= 45.0f)
     //     fov = 45.0f;
 }
 
