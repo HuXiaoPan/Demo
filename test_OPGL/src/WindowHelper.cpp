@@ -81,7 +81,7 @@ void WindowHelper::Init()
     // build and compile our shader program
     shape_base::shaders[0] = new Shader("res/vs_vc7f.glsl", "res/fs_vc7f.glsl"); // you can name your shader files however you like
     // shape_base::shaders[1] = new Shader("res/vs.glsl", "res/fs.glsl");
-    camera = new Camera(glm::vec3(1.0f, 1.0f, 3.0f));
+    camera = new Camera(glm::vec3(100.0f, 100.0f, 100.0f));
 }
 
 void WindowHelper::processInput()
@@ -105,6 +105,10 @@ void WindowHelper::processInput()
         mouse_button_right = true;
     if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_RELEASE)
         mouse_button_right = false;
+    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS)
+        mouse_button_middle = true;
+    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_RELEASE)
+        mouse_button_middle = false;
 }
 
 void WindowHelper::framebuffer_size_callback(GLFWwindow *window, int width, int height)
@@ -223,6 +227,8 @@ void WindowHelper::mouse_callback(GLFWwindow *window, double xpos, double ypos)
     lastY = ypos;
     if (mouse_button_right)
         camera->ProcessMouseMovement(-deltaX, deltaY);
+    if (mouse_button_middle)
+        camera->ProcessViewMove(deltaX, deltaY);
 }
 
 void WindowHelper::scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
@@ -233,6 +239,9 @@ void WindowHelper::scroll_callback(GLFWwindow *window, double xoffset, double yo
     //     fov = 1.0f;
     // if (fov >= 45.0f)
     //     fov = 45.0f;
+    // std::cout << " xoffset: " << xoffset << std::endl;
+    // std::cout << " yoffset: " << yoffset << std::endl;
+    camera->ProcessMouseScroll(yoffset);
 }
 
 float WindowHelper::updateDeltaTime()

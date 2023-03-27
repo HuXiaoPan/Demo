@@ -1,6 +1,6 @@
 #include "camera.h"
 
-Camera::Camera(glm::vec3 position, glm::vec3 up, float yaw, float pitch) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
+Camera::Camera(glm::vec3 position, glm::vec3 up, float yaw, float pitch) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY)//, Zoom(ZOOM)
 {
     Position = position;
     WorldUp = up;
@@ -9,7 +9,7 @@ Camera::Camera(glm::vec3 position, glm::vec3 up, float yaw, float pitch) : Front
     updateCameraVectors();
 }
 
-Camera::Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
+Camera::Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY)//, Zoom(ZOOM)
 {
     Position = glm::vec3(posX, posY, posZ);
     WorldUp = glm::vec3(upX, upY, upZ);
@@ -17,7 +17,6 @@ Camera::Camera(float posX, float posY, float posZ, float upX, float upY, float u
     Pitch = pitch;
     updateCameraVectors();
 }
-#include <iostream>
 glm::mat4 Camera::GetViewMatrix()
 {
     // std::cout << " fx: " << Front.x << " fy: " << Front.y << " fz: " << Front.z << std::endl;
@@ -61,13 +60,38 @@ void Camera::ProcessMouseMovement(float xoffset, float yoffset, GLboolean constr
     // update Front, Right and Up Vectors using the updated Euler angles
     updateCameraVectors();
 }
+#include <iostream>
 void Camera::ProcessMouseScroll(float yoffset)
 {
-    Zoom -= (float)yoffset;
-    if (Zoom < 1.0f)
-        Zoom = 1.0f;
-    if (Zoom > 45.0f)
-        Zoom = 45.0f;
+    // Zoom -= (float)yoffset;
+    // if (Zoom < 1.0f)
+    //     Zoom = 1.0f;
+    // if (Zoom > 45.0f)
+    //     Zoom = 45.0f;
+    Position = Position * ( 1.0f - yoffset * 0.1f);
+}
+
+void Camera::ProcessViewMove(float xoffset, float yoffset)
+{
+
+    xoffset *= MouseSensitivity;
+    yoffset *= MouseSensitivity;
+
+    glm::mat4 rotate = glm::rotate(glm::mat4(1.0f), glm::radians(xoffset), WorldUp);
+    Position = glm::vec3(rotate[0][0] * Position.x + rotate[0][1] * Position.y + +rotate[0][2] * Position.z,
+                            rotate[1][0] * Position.x + rotate[1][1] * Position.y + +rotate[1][2] * Position.z,
+                            rotate[2][0] * Position.x + rotate[2][1] * Position.y + +rotate[2][2] * Position.z);
+    Yaw += xoffset;
+    rotate = glm::rotate(glm::mat4(1.0f), glm::radians(yoffset), Right);
+    Position = glm::vec3(rotate[0][0] * Position.x + rotate[0][1] * Position.y + +rotate[0][2] * Position.z,
+                  rotate[1][0] * Position.x + rotate[1][1] * Position.y + +rotate[1][2] * Position.z,
+                  rotate[2][0] * Position.x + rotate[2][1] * Position.y + +rotate[2][2] * Position.z);
+    Pitch -= yoffset;
+    if (Pitch > 89.0f)
+        Pitch = 89.0f;
+    if (Pitch < -89.0f)
+        Pitch = -89.0f;
+    updateCameraVectors();
 }
 
 void Camera::updateCameraVectors()

@@ -17,6 +17,7 @@ public:
 private:
 
     bool mouse_button_right = false;
+    bool mouse_button_middle = false;
     // settings
     unsigned int width;
     unsigned int height;
