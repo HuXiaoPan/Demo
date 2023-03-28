@@ -12,7 +12,7 @@ void Helper::CreateTestPointDatas(float *data, unsigned int size)
         data[i * 7 + 1] = (rand() % 10001) / 100.0f;
         data[i * 7 + 2] = (rand() % 10001) / 100.0f;
         data[i * 7 + 3] = 1.0f;
-        data[i * 7 + 4] = 1.0f;
+        data[i * 7 + 4] = i == 0 ? 0.0f : 1.0f;
         data[i * 7 + 5] = 0.0f;
         data[i * 7 + 6] = 1.0f;
     }

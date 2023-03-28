@@ -11,6 +11,7 @@
 #include <string>
 
 #include "Bessel.h"
+#include "B-Spline.h"
 
 int main_test_OPGL(int argc, char const *argv[])
 {
@@ -70,7 +71,7 @@ int main_test_OPGL(int argc, char const *argv[])
     shape_point coord_p(p, sizeof(p));
     shape_polygon plat(coordinatePlat, sizeof(coordinatePlat), elem_Plat, sizeof(elem_Plat));
 
-    int point_count = 11;
+    int point_count = 13;
     float test_point[point_count * 7] = {0};
     Helper::CreateTestPointDatas(test_point, point_count);
     shape_point test_p(test_point, sizeof(test_point));
@@ -78,59 +79,55 @@ int main_test_OPGL(int argc, char const *argv[])
     Helper::CreateTestLineDatas(test_point, point_count, test_line);
     shape_line test_l(test_line, sizeof(test_line));
 
-    int k = 2;
-    int samPointCount = 50;
+    int k = 3;
+    int samPointCount = 5000;
     glm::vec3 input[point_count];
 
     for (size_t i = 0; i < point_count; i++)
     {
         input[i] = glm::vec3(test_point[i * 7 + 0], test_point[i * 7 + 1], test_point[i * 7 + 2]);
     }
-
+    // float nodeList[15] = {0.0f, 0.0f, 0.0f, 0.0f, 1.0f / 8, 2.0f / 8, 3.0f / 8, 4.0f / 8, 5.0f / 8, 6.0f / 8, 7.0f / 8, 1.0f, 1.0f, 1.0f, 1.0f};
+    float nodeList[15] = {0.0f, 1.0f/14, 2.0f/14, 3.0f/14, 4.0f/14, 5.0f/14, 6.0f/14, 7.0f/14, 8.0f/14, 9.0f/14, 10.0f/14, 11.0f/14, 12.0f/14, 13.0f/14, 1.0f};
     float output[7 * samPointCount];
-    if (point_count <= k)
+    for (int i = 0; i < samPointCount; ++i)
     {
-        for (int i = 0; i < samPointCount; ++i)
-        {
-            glm::vec3 rlt = GetBesselPoint(input, k, i * (1.0f / samPointCount));
-            output[i * 7 + 0] = rlt.x;
-            output[i * 7 + 1] = rlt.y;
-            output[i * 7 + 2] = rlt.z;
-            output[i * 7 + 3] = 0.3f;
-            output[i * 7 + 4] = 0.2f;
-            output[i * 7 + 5] = 0.9f;
-            output[i * 7 + 6] = 1.0f;
-        }
+        // glm::vec3 rlt = GetBesselPoint(input, k, i * (1.0f / samPointCount));
+        glm::vec3 rlt = GetBSplinePoint(input, point_count, i * (1.0f / samPointCount), k, nodeList);
+        output[i * 7 + 0] = rlt.x;
+        output[i * 7 + 1] = rlt.y;
+        output[i * 7 + 2] = rlt.z;
+        output[i * 7 + 3] = 0.3f;
+        output[i * 7 + 4] = 0.2f;
+        output[i * 7 + 5] = 0.9f;
+        output[i * 7 + 6] = 1.0f;
     }
-    else
-    {
-        // int kcount = (point_count - 2) / (k - 1);
-        // int kmodle = (point_count - 2) % (k - 1);
-        // for (size_t i = 0; i < kcount; i++)
-        // {
-        //     float output1[7 * samPointCount];
-        //     glm::vec3 input_sub[k + 1];
-        //     input_sub[0] = i == 0 ? input[0] : (input[i * (k - 1)] - input[i * (k - 1) - 1]) * 0.5f + input[i * (k - 1) - 1];
-        //     for (size_t s = 1; s < k; s++)
-        //     {
-        //         input_sub[s] = input[i * (k - 1) + s];
-        //     }
-        //     input_sub[k] = i == kcount - 1 ? input[(i + 1) * (k - 1) + 1] : (input[(i + 1) * (k - 1)  + 1] - input[(i + 1) * (k - 1)]) * 0.5f + input[(i + 1) * (k - 1)];
-        //     for (int r = 0; r < samPointCount; ++r)
-        //     {
-        //         glm::vec3 rlt = GetBesselPoint(input_sub, k + 1, r * (1.0f / samPointCount));
-        //         output1[r * 7 + 0] = rlt.x;
-        //         output1[r * 7 + 1] = rlt.y;
-        //         output1[r * 7 + 2] = rlt.z;
-        //         output1[r * 7 + 3] = 0.3f;
-        //         output1[r * 7 + 4] = 0.2f;
-        //         output1[r * 7 + 5] = 0.9f;
-        //         output1[r * 7 + 6] = 1.0f;
-        //     }
-        //     shape_point *test_rr = new shape_point(output1, sizeof(output1));
-        //     WindowHelper.shp_map[std::to_string(i)] = test_rr;
-        // }
-    }
+    // int kcount = (point_count - 2) / (k - 1);
+    // int kmodle = (point_count - 2) % (k - 1);
+    // for (size_t i = 0; i < kcount; i++)
+    // {
+    //     float output1[7 * samPointCount];
+    //     glm::vec3 input_sub[k + 1];
+    //     input_sub[0] = i == 0 ? input[0] : (input[i * (k - 1)] - input[i * (k - 1) - 1]) * 0.5f + input[i * (k - 1) - 1];
+    //     for (size_t s = 1; s < k; s++)
+    //     {
+    //         input_sub[s] = input[i * (k - 1) + s];
+    //     }
+    //     input_sub[k] = i == kcount - 1 ? input[(i + 1) * (k - 1) + 1] : (input[(i + 1) * (k - 1)  + 1] - input[(i + 1) * (k - 1)]) * 0.5f + input[(i + 1) * (k - 1)];
+    //     for (int r = 0; r < samPointCount; ++r)
+    //     {
+    //         glm::vec3 rlt = GetBesselPoint(input_sub, k + 1, r * (1.0f / samPointCount));
+    //         output1[r * 7 + 0] = rlt.x;
+    //         output1[r * 7 + 1] = rlt.y;
+    //         output1[r * 7 + 2] = rlt.z;
+    //         output1[r * 7 + 3] = 0.3f;
+    //         output1[r * 7 + 4] = 0.2f;
+    //         output1[r * 7 + 5] = 0.9f;
+    //         output1[r * 7 + 6] = 1.0f;
+    //     }
+    //     shape_point *test_rr = new shape_point(output1, sizeof(output1));
+    //     WindowHelper.shp_map[std::to_string(i)] = test_rr;
+    // }
     shape_point test_r(output, sizeof(output));
 
     // tell opengl for each sampler to which texture unit it belongs to (only has to be done once)
