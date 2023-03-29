@@ -8,14 +8,12 @@
 float BSplineBasicMethod(int i, int k, float u, float *nodeList)
 {
     float result = 0;
-    if (k == 1)
+    if (k == 0)
     {
-        result = nodeList[i] <= u && u < nodeList[i + 1] ? 1 : 0;
+        result = nodeList[i] > u || u >= nodeList[i + 1] ? 0 : 1;
     }
-    else if (k > 1)
+    else if (k >= 0)
     {
-        if (u < nodeList[i] || u > nodeList[i + k])
-            return result;
         float node1 = nodeList[i];
         float node2 = nodeList[i + k];
         float node3 = nodeList[i + 1];

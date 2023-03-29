@@ -2,6 +2,10 @@
 #include <cstdlib>
 #include <ctime>
 
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtc/type_ptr.hpp"
+
 void Helper::CreateTestPointDatas(float *data, unsigned int size)
 {
     srand(time(0));
@@ -10,12 +14,23 @@ void Helper::CreateTestPointDatas(float *data, unsigned int size)
     {
         data[i * 7] = (rand() % 10001) / 100.0f;
         data[i * 7 + 1] = (rand() % 10001) / 100.0f;
-        data[i * 7 + 2] = (rand() % 10001) / 100.0f;
+        data[i * 7 + 2] = 1.0f;//(rand() % 10001) / 100.0f;
         data[i * 7 + 3] = 1.0f;
         data[i * 7 + 4] = i == 0 ? 0.0f : 1.0f;
         data[i * 7 + 5] = 0.0f;
         data[i * 7 + 6] = 1.0f;
     }
+
+    // for (int i = 0; i < size; ++i)
+    // {
+    //     data[i * 7] = i == 0 ? (rand() % 101) / 10.0f : data[(i - 1) * 7] + (rand() % 101) / 10.0f;
+    //     data[i * 7 + 1] = i == 0 ? (rand() % 101) / 10.0f : data[(i - 1) * 7 + 1] +(rand() % 101) / 10.0f;
+    //     data[i * 7 + 2] = 1.0f;//(rand() % 10001) / 100.0f;
+    //     data[i * 7 + 3] = 1.0f;
+    //     data[i * 7 + 4] = i == 0 ? 0.0f : 1.0f;
+    //     data[i * 7 + 5] = 0.0f;
+    //     data[i * 7 + 6] = 1.0f;
+    // }
 }
 
 void Helper::CreateTestLineDatas(float *input, unsigned int input_size, float *output)

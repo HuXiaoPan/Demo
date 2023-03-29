@@ -9,6 +9,7 @@
 #include "shape_point.h"
 #include "shape_polygon.h"
 #include <string>
+#include <vector>
 
 #include "Bessel.h"
 #include "B-Spline.h"
@@ -71,15 +72,15 @@ int main_test_OPGL(int argc, char const *argv[])
     shape_point coord_p(p, sizeof(p));
     shape_polygon plat(coordinatePlat, sizeof(coordinatePlat), elem_Plat, sizeof(elem_Plat));
 
-    int point_count = 13;
-    float test_point[point_count * 7] = {0};
+    int point_count = 3;
+    float test_point[point_count * 7] = {0.0f};
     Helper::CreateTestPointDatas(test_point, point_count);
     shape_point test_p(test_point, sizeof(test_point));
     float test_line[(point_count * 2 - 2) * 7] = {0};
     Helper::CreateTestLineDatas(test_point, point_count, test_line);
     shape_line test_l(test_line, sizeof(test_line));
 
-    int k = 3;
+    int k = 2;
     int samPointCount = 5000;
     glm::vec3 input[point_count];
 
@@ -87,13 +88,23 @@ int main_test_OPGL(int argc, char const *argv[])
     {
         input[i] = glm::vec3(test_point[i * 7 + 0], test_point[i * 7 + 1], test_point[i * 7 + 2]);
     }
-    // float nodeList[15] = {0.0f, 0.0f, 0.0f, 0.0f, 1.0f / 8, 2.0f / 8, 3.0f / 8, 4.0f / 8, 5.0f / 8, 6.0f / 8, 7.0f / 8, 1.0f, 1.0f, 1.0f, 1.0f};
-    float nodeList[15] = {0.0f, 1.0f/14, 2.0f/14, 3.0f/14, 4.0f/14, 5.0f/14, 6.0f/14, 7.0f/14, 8.0f/14, 9.0f/14, 10.0f/14, 11.0f/14, 12.0f/14, 13.0f/14, 1.0f};
+    float nodeList[point_count + 1 + k] = {0.0f};
+    for (size_t i = 0; i < point_count + 1 + k; i++)
+    {
+        if (i < k + 1)
+            nodeList[i] = 0.0f;
+        else if (point_count + 1 + k - i < k + 1)
+            nodeList[i] = 1.0f;
+        else
+            nodeList[i] = (i - k) * 1.0f / (point_count - k);
+        // nodeList[i] = i * 1.0f/ (point_count + k);
+    }
+    // float nodeList[15] = {0.0f, 1.0f/13, 2.0f/13, 3.0f/13, 4.0f/13, 5.0f/13, 6.0f/13, 7.0f/13, 8.0f/13, 9.0f/13, 10.0f/13, 11.0f/13, 12.0f/13, 1.0f};
     float output[7 * samPointCount];
     for (int i = 0; i < samPointCount; ++i)
     {
         // glm::vec3 rlt = GetBesselPoint(input, k, i * (1.0f / samPointCount));
-        glm::vec3 rlt = GetBSplinePoint(input, point_count, i * (1.0f / samPointCount), k, nodeList);
+        glm::vec3 rlt = GetBSplinePoint(input, point_count + 1, i * (1.0f / samPointCount), k, nodeList);
         output[i * 7 + 0] = rlt.x;
         output[i * 7 + 1] = rlt.y;
         output[i * 7 + 2] = rlt.z;
