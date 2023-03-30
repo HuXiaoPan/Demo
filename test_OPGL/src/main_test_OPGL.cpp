@@ -72,73 +72,36 @@ int main_test_OPGL(int argc, char const *argv[])
     shape_point coord_p(p, sizeof(p));
     shape_polygon plat(coordinatePlat, sizeof(coordinatePlat), elem_Plat, sizeof(elem_Plat));
 
-    int point_count = 3;
-    float test_point[point_count * 7] = {0.0f};
-    Helper::CreateTestPointDatas(test_point, point_count);
+    int point_count = 16;
+    int k = 2;
+    int samPointCount = 1000;
+    glm::vec3 input[point_count];
+    float nodeList[point_count + 1 + k] = {0.0f};
+    std::vector<glm::vec3> pt_list;
+    std::vector<glm::vec3> line_list;
+    std::vector<glm::vec3> result_list;
+    Helper::CreateTestPointDatas(pt_list, point_count);
+    Helper::CreateTestLineDatas(pt_list, line_list);
+    float test_point[pt_list.size() * 7] = {0.0f};
+    float test_line[line_list.size() * 7] = {0.0f};
+    Helper::ConvertData(pt_list, test_point, glm::vec4(1.0f,1.0f,0.0f,1.0f));
+    Helper::ConvertData(line_list, test_line, glm::vec4(0.0f,1.0f,1.0f,1.0f));
     shape_point test_p(test_point, sizeof(test_point));
-    float test_line[(point_count * 2 - 2) * 7] = {0};
-    Helper::CreateTestLineDatas(test_point, point_count, test_line);
     shape_line test_l(test_line, sizeof(test_line));
 
-    int k = 2;
-    int samPointCount = 5000;
-    glm::vec3 input[point_count];
+    CreateKnodList(nodeList, point_count, k);
 
     for (size_t i = 0; i < point_count; i++)
     {
         input[i] = glm::vec3(test_point[i * 7 + 0], test_point[i * 7 + 1], test_point[i * 7 + 2]);
     }
-    float nodeList[point_count + 1 + k] = {0.0f};
-    for (size_t i = 0; i < point_count + 1 + k; i++)
-    {
-        if (i < k + 1)
-            nodeList[i] = 0.0f;
-        else if (point_count + 1 + k - i < k + 1)
-            nodeList[i] = 1.0f;
-        else
-            nodeList[i] = (i - k) * 1.0f / (point_count - k);
-        // nodeList[i] = i * 1.0f/ (point_count + k);
-    }
-    // float nodeList[15] = {0.0f, 1.0f/13, 2.0f/13, 3.0f/13, 4.0f/13, 5.0f/13, 6.0f/13, 7.0f/13, 8.0f/13, 9.0f/13, 10.0f/13, 11.0f/13, 12.0f/13, 1.0f};
-    float output[7 * samPointCount];
     for (int i = 0; i < samPointCount; ++i)
     {
         // glm::vec3 rlt = GetBesselPoint(input, k, i * (1.0f / samPointCount));
-        glm::vec3 rlt = GetBSplinePoint(input, point_count + 1, i * (1.0f / samPointCount), k, nodeList);
-        output[i * 7 + 0] = rlt.x;
-        output[i * 7 + 1] = rlt.y;
-        output[i * 7 + 2] = rlt.z;
-        output[i * 7 + 3] = 0.3f;
-        output[i * 7 + 4] = 0.2f;
-        output[i * 7 + 5] = 0.9f;
-        output[i * 7 + 6] = 1.0f;
+        result_list.push_back(GetBSplinePoint(input, point_count + 1, i * (1.0f / samPointCount), k, nodeList));
     }
-    // int kcount = (point_count - 2) / (k - 1);
-    // int kmodle = (point_count - 2) % (k - 1);
-    // for (size_t i = 0; i < kcount; i++)
-    // {
-    //     float output1[7 * samPointCount];
-    //     glm::vec3 input_sub[k + 1];
-    //     input_sub[0] = i == 0 ? input[0] : (input[i * (k - 1)] - input[i * (k - 1) - 1]) * 0.5f + input[i * (k - 1) - 1];
-    //     for (size_t s = 1; s < k; s++)
-    //     {
-    //         input_sub[s] = input[i * (k - 1) + s];
-    //     }
-    //     input_sub[k] = i == kcount - 1 ? input[(i + 1) * (k - 1) + 1] : (input[(i + 1) * (k - 1)  + 1] - input[(i + 1) * (k - 1)]) * 0.5f + input[(i + 1) * (k - 1)];
-    //     for (int r = 0; r < samPointCount; ++r)
-    //     {
-    //         glm::vec3 rlt = GetBesselPoint(input_sub, k + 1, r * (1.0f / samPointCount));
-    //         output1[r * 7 + 0] = rlt.x;
-    //         output1[r * 7 + 1] = rlt.y;
-    //         output1[r * 7 + 2] = rlt.z;
-    //         output1[r * 7 + 3] = 0.3f;
-    //         output1[r * 7 + 4] = 0.2f;
-    //         output1[r * 7 + 5] = 0.9f;
-    //         output1[r * 7 + 6] = 1.0f;
-    //     }
-    //     shape_point *test_rr = new shape_point(output1, sizeof(output1));
-    //     WindowHelper.shp_map[std::to_string(i)] = test_rr;
-    // }
+    float output[7 * result_list.size()] = {0.0f};
+    Helper::ConvertData(result_list, output, glm::vec4(0.3f,0.2f,0.9f,0.5f));
     shape_point test_r(output, sizeof(output));
 
     // tell opengl for each sampler to which texture unit it belongs to (only has to be done once)

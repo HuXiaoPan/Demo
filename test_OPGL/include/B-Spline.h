@@ -5,6 +5,32 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
 
+void CreateKnodList(float *KnodList, int point_count, int k, bool isClamped = true)
+{
+
+    if (isClamped)
+    {
+        for (size_t i = 0; i < point_count + 1 + k; i++)
+        {
+            if (i < k + 1)
+                KnodList[i] = 0.0f;
+            else if (point_count + 1 + k - i < k + 1)
+                KnodList[i] = 1.0f;
+            else
+                KnodList[i] = (i - k) * 1.0f / (point_count - k);
+        }
+    }
+    else
+    {
+        for (size_t i = 0; i < point_count + 1 + k; i++)
+        {
+            KnodList[i] = i * 1.0f / (point_count + k);
+        }
+    }
+}
+
+// float nodeList[15] = {0.0f, 1.0f/13, 2.0f/13, 3.0f/13, 4.0f/13, 5.0f/13, 6.0f/13, 7.0f/13, 8.0f/13, 9.0f/13, 10.0f/13, 11.0f/13, 12.0f/13, 1.0f};
+
 float BSplineBasicMethod(int i, int k, float u, float *nodeList)
 {
     float result = 0;
