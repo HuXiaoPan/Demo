@@ -38,7 +38,7 @@ float BSplineBasicMethod(int i, int k, float u, float *nodeList)
     {
         result = nodeList[i] > u || u >= nodeList[i + 1] ? 0 : 1;
     }
-    else if (k >= 0)
+    else if (k > 0)
     {
         float node1 = nodeList[i];
         float node2 = nodeList[i + k];
@@ -65,9 +65,9 @@ glm::vec3 GetBSplinePoint(glm::vec3 *input, unsigned input_size, float t, int k,
     if (input_size <= 1)
         return input[0];
     if (input_size <= 2)
-        return (input[1] - input[0]) * t + input[0];
+        return input[1] * t + input[0] * (1 - t);
     glm::vec3 result = glm::vec3(0.0f);
-    for (size_t i = 0; i < input_size - 1; i++)
+    for (size_t i = 0; i < input_size; i++)
     {
         float z = BSplineBasicMethod(i, k, t, nodeList);
         result += input[i] * z;

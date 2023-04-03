@@ -72,7 +72,7 @@ int main_test_OPGL(int argc, char const *argv[])
     shape_point coord_p(p, sizeof(p));
     shape_polygon plat(coordinatePlat, sizeof(coordinatePlat), elem_Plat, sizeof(elem_Plat));
 
-    int point_count = 16;
+    int point_count = 7;
     int k = 2;
     int samPointCount = 1000;
     glm::vec3 input[point_count];
@@ -98,7 +98,7 @@ int main_test_OPGL(int argc, char const *argv[])
     for (int i = 0; i < samPointCount; ++i)
     {
         // glm::vec3 rlt = GetBesselPoint(input, k, i * (1.0f / samPointCount));
-        result_list.push_back(GetBSplinePoint(input, point_count + 1, i * (1.0f / samPointCount), k, nodeList));
+        result_list.push_back(GetBSplinePoint(input, point_count, i * (1.0f / samPointCount), k, nodeList));
     }
     float output[7 * result_list.size()] = {0.0f};
     Helper::ConvertData(result_list, output, glm::vec4(0.3f,0.2f,0.9f,0.5f));
