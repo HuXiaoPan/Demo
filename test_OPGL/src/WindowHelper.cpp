@@ -80,7 +80,8 @@ void WindowHelper::Init()
     glBlendFunc(GL_SRC_ALPHA, GL_ONE); // 基于源象素alpha通道值的半透明混合函数
     // build and compile our shader program
     shape_base::shaders[0] = new Shader("res/vs_vc7f.glsl", "res/fs_vc7f.glsl"); // you can name your shader files however you like
-    // shape_base::shaders[1] = new Shader("res/vs.glsl", "res/fs.glsl");
+    shape_base::shaders[1] = new Shader("res/vs_light.glsl", "res/fs_light.glsl");
+    shape_base::shaders[2] = new Shader("res/vs_color.glsl", "res/fs_color.glsl");
     camera = new Camera(glm::vec3(100.0f, 100.0f, 100.0f));
 }
 
