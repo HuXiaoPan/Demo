@@ -1,14 +1,27 @@
 # hello:
 # 	echo "hello make!!!"
 
-test: test.o
-	cc test.o -o test
+files := file1.cpp file2.cpp file3.cpp
 
-test.o: test.c
-	cc -c test.c -o test.o
+all: $(files)
 
-test.c:
-	echo "int main() { return 0; }" >> test.c
+$(files):
+	echo $@
+
+# all: test_file
+
+# test_file: test
+# 	echo "touch some source files:" $(files)
+# 	touch $(files)
+
+# test: test.o
+# 	cc test.o -o test
+
+# test.o: test.c
+# 	cc -c test.c -o test.o
+
+# test.c:
+# 	echo "int main() { return 0; }" >> test.c
 
 clean:
-	rm -f test test.o test.c
+	rm -f $(files)
